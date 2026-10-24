@@ -1,0 +1,15 @@
+{
+  "name": "ralypto-dress-shop-manager",
+  "version": "1.0.0",
+  "description": "Ralypto Dress Shop Management System - Retail POS, Inventory & SaaS for Sri Lankan Fashion Retailers",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "test:backend": "npm --prefix backend test",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build"
+  },
+  "keywords": ["pos", "fashion-retail", "inventory", "dress-shop", "sri-lanka", "lkr"],
+  "author": "Ralypto Technologies",
+  "license": "MIT"
+}
