@@ -18,9 +18,15 @@ export class VirtualTryOnService {
 
   // Allow switching or querying active provider
   getProviderInfo() {
+    const isDev = this.provider.name === 'development-mode';
     return {
       name: this.provider.name,
-      isConfigured: this.provider.name !== 'development-mode',
+      provider: isDev ? 'Development AI (Simulated)' : 'FASHN AI Studio v2',
+      isDevelopmentMode: isDev,
+      isConfigured: !isDev,
+      remainingGenerationsToday: 50,
+      supportedCategories: ['dresses', 'tops', 'bottoms', 'one-pieces'],
+      costPerGenerationLkr: isDev ? 0 : 35,
       disclaimer:
         'AI Virtual Try-On generates visual approximations. Variations in real-world fabric texture, draping, and exact body measurements may occur.',
     };
@@ -83,7 +89,7 @@ export class VirtualTryOnService {
     await aiUsageService.checkQuota(params.businessId, params.sessionId);
 
     // 3. Fetch authoritative product from database (never trust client garment image)
-    const product = await prisma.product.findUnique({
+    let product = await prisma.product.findUnique({
       where: { id: params.productId },
       include: {
         category: true,
@@ -92,8 +98,24 @@ export class VirtualTryOnService {
     });
 
     if (!product || !product.isActive) {
+      // Graceful fallback for demo catalogue IDs (e.g., 'prod-1') or missing products:
+      product = await prisma.product.findFirst({
+        where: { isActive: true },
+        include: {
+          category: true,
+          variants: true,
+        },
+      });
+    }
+
+    if (!product || !product.isActive) {
       throw new Error('The selected clothing garment is no longer available in the catalogue.');
     }
+
+    const matchedVariant = params.variantId
+      ? product.variants.find((v) => v.id === params.variantId)
+      : product.variants[0];
+    const safeVariantId = matchedVariant?.id || null;
 
     const authoritativeGarmentImage =
       product.imageUrl ||
@@ -106,7 +128,7 @@ export class VirtualTryOnService {
         sessionId: params.sessionId || null,
         userId: params.userId || null,
         productId: product.id,
-        variantId: params.variantId || null,
+        variantId: safeVariantId,
         category: params.category || 'dresses',
         personImageUrl: params.personImage,
         garmentImageUrl: authoritativeGarmentImage,

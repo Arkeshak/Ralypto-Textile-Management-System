@@ -385,7 +385,7 @@ export const AIFashionStudioPage: React.FC<AIFashionStudioProps> = ({
     try {
       const res = await api.post('/ai/photo-studio/process', {
         productId: photoStudioProduct?.id,
-        originalImageUrl: photoStudioRawImage,
+        originalImageUrl: rawImage,
         backgroundScene,
         generateCopy: true,
       });

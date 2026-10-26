@@ -18,6 +18,7 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
 
@@ -28,50 +29,120 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-const navigationSections = [
-  {
-    group: 'Operations',
-    items: [
-      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { id: 'ai-studio', label: 'AI Fashion Studio', icon: Sparkles, badge: 'AI' },
-      { id: 'pos', label: 'Point of Sale', icon: ShoppingCart },
-      { id: 'sales', label: 'Sales & Invoices', icon: Receipt },
-      { id: 'returns', label: 'Returns', icon: RotateCcw },
-    ],
-  },
-  {
-    group: 'Catalogue',
-    items: [
-      { id: 'products', label: 'Products', icon: Shirt },
-      { id: 'inventory', label: 'Inventory', icon: Boxes },
-      { id: 'categories', label: 'Categories', icon: Tags },
-    ],
-  },
-  {
-    group: 'Relationships',
-    items: [
-      { id: 'customers', label: 'Customers', icon: Users },
-      { id: 'suppliers', label: 'Suppliers', icon: Truck },
-    ],
-  },
-  {
-    group: 'Finance',
-    items: [
-      { id: 'expenses', label: 'Expenses', icon: DollarSign },
-      { id: 'reports', label: 'Reports', icon: BarChart3 },
-      { id: 'staff', label: 'Staff', icon: UserCheck },
-      { id: 'branches', label: 'Branches', icon: Building2 },
-    ],
-  },
-  {
-    group: 'Account',
-    items: [
-      { id: 'settings', label: 'Settings', icon: Settings },
-      { id: 'subscription', label: 'Billing', icon: CreditCard },
-      { id: 'help', label: 'Help', icon: HelpCircle },
-    ],
-  },
-];
+const getSectionsForRole = (role?: string) => {
+  const r = (role || '').toUpperCase();
+
+  if (r === 'CASHIER' || r === 'SALES') {
+    return [
+      {
+        group: 'Point of Sale',
+        items: [
+          { id: 'pos', label: 'Counter POS', icon: ShoppingCart },
+          { id: 'sales', label: 'Sales & Receipts', icon: Receipt },
+          { id: 'returns', label: 'Returns', icon: RotateCcw },
+        ],
+      },
+      {
+        group: 'Catalogue & Showcase',
+        items: [
+          { id: 'products', label: 'Garments', icon: Shirt },
+          { id: 'closet', label: 'Closet & Roll Shelf', icon: Sparkles, badge: 'New' },
+        ],
+      },
+      {
+        group: 'Support',
+        items: [{ id: 'help', label: 'Shortcuts & Help', icon: HelpCircle }],
+      },
+    ];
+  }
+
+  if (r === 'STOREKEEPER') {
+    return [
+      {
+        group: 'Warehouse Operations',
+        items: [
+          { id: 'inventory', label: 'Stock & Rolls', icon: Boxes },
+          { id: 'products', label: 'Product Matrix', icon: Shirt },
+          { id: 'closet', label: 'Fabric Roll Shelf', icon: Sparkles },
+          { id: 'suppliers', label: 'Suppliers (GRN)', icon: Truck },
+        ],
+      },
+      {
+        group: 'Support',
+        items: [{ id: 'help', label: 'Help', icon: HelpCircle }],
+      },
+    ];
+  }
+
+  if (r === 'SUPERVISOR') {
+    return [
+      {
+        group: 'Production Floor',
+        items: [
+          { id: 'production', label: 'Production Stage Board', icon: Boxes },
+          { id: 'inventory', label: 'Inventory Stock', icon: Layers },
+          { id: 'products', label: 'Garment Styles', icon: Shirt },
+          { id: 'closet', label: 'Closet Showcase', icon: Sparkles },
+        ],
+      },
+      {
+        group: 'Team',
+        items: [
+          { id: 'staff', label: 'Floor Operators', icon: UserCheck },
+          { id: 'help', label: 'Help', icon: HelpCircle },
+        ],
+      },
+    ];
+  }
+
+  // Owner & Manager: Full Access
+  return [
+    {
+      group: 'Management',
+      items: [
+        { id: 'dashboard', label: 'Owner Dashboard', icon: LayoutDashboard },
+        { id: 'ai-studio', label: 'AI Fashion Studio', icon: Sparkles, badge: 'AI' },
+        { id: 'pos', label: 'Point of Sale', icon: ShoppingCart },
+        { id: 'production', label: 'Production Stages', icon: Layers },
+        { id: 'sales', label: 'Sales & Invoices', icon: Receipt },
+        { id: 'returns', label: 'Returns', icon: RotateCcw },
+      ],
+    },
+    {
+      group: 'Catalogue & Showroom',
+      items: [
+        { id: 'products', label: 'Products', icon: Shirt },
+        { id: 'closet', label: 'Closet & Roll Shelf', icon: Sparkles, badge: 'New' },
+        { id: 'inventory', label: 'Inventory Matrix', icon: Boxes },
+        { id: 'categories', label: 'Categories', icon: Tags },
+      ],
+    },
+    {
+      group: 'Relationships',
+      items: [
+        { id: 'customers', label: 'Customers', icon: Users },
+        { id: 'suppliers', label: 'Suppliers', icon: Truck },
+      ],
+    },
+    {
+      group: 'Finance & Analytics',
+      items: [
+        { id: 'expenses', label: 'Expenses', icon: DollarSign },
+        { id: 'reports', label: 'Financial Reports', icon: BarChart3 },
+        { id: 'staff', label: 'Staff Management', icon: UserCheck },
+        { id: 'branches', label: 'Branches', icon: Building2 },
+      ],
+    },
+    {
+      group: 'Account',
+      items: [
+        { id: 'settings', label: 'Settings', icon: Settings },
+        { id: 'subscription', label: 'Billing', icon: CreditCard },
+        { id: 'help', label: 'Help & Shortcuts', icon: HelpCircle },
+      ],
+    },
+  ];
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
@@ -80,6 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
 }) => {
   const { user, business, logout } = useAuthStore();
+  const navigationSections = getSectionsForRole(user?.role);
 
   const handleNavClick = (tabId: string) => {
     onSelectTab(tabId);

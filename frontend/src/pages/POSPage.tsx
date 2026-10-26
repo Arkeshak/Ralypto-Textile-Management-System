@@ -11,12 +11,14 @@ import {
 import { api } from '../services/api';
 import { useAuthStore } from '../stores/auth.store';
 import { useCartStore } from '../stores/cart.store';
+import { useToastStore } from '../stores/toast.store';
 import { Product, Category, Customer, Sale } from '../types';
 import { ProductCard } from '../components/pos/ProductCard';
 import { VariantSelectModal } from '../components/pos/VariantSelectModal';
 import { CartPanel } from '../components/pos/CartPanel';
 import { PaymentModal } from '../components/pos/PaymentModal';
 import { ReceiptModal } from '../components/pos/ReceiptModal';
+import { Modal, PressButton } from '../lib/motion';
 
 interface POSPageProps {
   onTryOnProduct?: (product: Product) => void;
@@ -68,6 +70,8 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
     fetchData();
   }, [activeBranchId]);
 
+  const { push: pushToast } = useToastStore();
+
   // 2. Barcode scanner fast handle
   const handleBarcodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +85,7 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
       if (res.success && res.data) {
         const item = res.data;
         if (item.stockOnHand <= 0) {
-          setBarcodeAlert(`"${item.productName} (${item.size}/${item.color})" is out of stock.`);
+          pushToast(`"${item.productName} (${item.size}/${item.color})" is out of stock.`, 'warn');
           return;
         }
 
@@ -101,13 +105,14 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
         });
 
         if (!success) {
-          setBarcodeAlert(`Maximum available stock reached for this item.`);
+          pushToast(`Maximum available stock reached for ${item.productName}.`, 'warn');
         } else {
+          pushToast(`Scanned: ${item.productName} (${item.size})`, 'ok');
           setBarcodeInput('');
         }
       }
     } catch (err: any) {
-      setBarcodeAlert(err.message || `No clothing variant found for barcode: ${code}`);
+      pushToast(err.message || `No clothing variant found for barcode: ${code}`, 'error');
     }
   };
 
@@ -128,15 +133,15 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
   });
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] flex flex-col lg:flex-row overflow-hidden bg-surface-secondary">
+    <div className="h-[calc(100vh-3.5rem)] flex flex-col lg:flex-row overflow-hidden bg-[#f3f4f6]">
       {/* LEFT SECTION: Catalog & Barcode Scanner */}
       <div className="flex-1 flex flex-col overflow-hidden p-4 sm:p-6 space-y-4">
         {/* Barcode scanner & Text search row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Barcode Hardware Reader Input */}
           <form onSubmit={handleBarcodeSubmit} className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-action-500">
-              <Barcode className="w-4 h-4" />
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-600">
+              <Barcode className="w-5 h-5" />
             </div>
             <input
               ref={barcodeInputRef}
@@ -144,10 +149,10 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
               placeholder="Scan barcode or enter SKU..."
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
-              className="input-field pl-10 pr-20 text-xs sm:text-sm font-medium"
+              className="w-full min-h-12 pl-11 pr-20 text-sm font-semibold rounded-xl bg-white border border-slate-200 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-slate-900"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <kbd className="px-1.5 py-0.5 text-3xs font-semibold bg-neutral-200 text-label-secondary rounded border border-neutral-300">
+              <kbd className="px-2 py-0.5 text-xs font-bold bg-slate-100 text-slate-500 rounded border border-slate-200">
                 ↵ Enter
               </kbd>
             </div>
@@ -155,29 +160,29 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
 
           {/* Keyword Search */}
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-label-tertiary">
-              <Search className="w-4 h-4" />
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <Search className="w-5 h-5" />
             </div>
             <input
               type="text"
               placeholder="Search dress name, color, style..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-field pl-10 text-xs sm:text-sm font-medium"
+              className="w-full min-h-12 pl-11 pr-4 text-sm font-semibold rounded-xl bg-white border border-slate-200 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-slate-900"
             />
           </div>
         </div>
 
         {/* Barcode Alert Banner */}
         {barcodeAlert && (
-          <div className="p-3 bg-error-50 border border-error-100 rounded-xl flex items-center justify-between text-error-700 text-xs font-medium animate-fade-in">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between text-red-700 text-xs font-semibold">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-error-600" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
               <span>{barcodeAlert}</span>
             </div>
             <button
               onClick={() => setBarcodeAlert(null)}
-              className="text-error-500 hover:text-error-700 ml-2"
+              className="text-red-500 hover:text-red-700 ml-2"
             >
               <X className="w-4 h-4" />
             </button>
@@ -189,10 +194,10 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
           <button
             type="button"
             onClick={() => setSelectedCategoryId('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
               selectedCategoryId === 'all'
-                ? 'bg-label-primary text-white border-label-primary shadow-xs'
-                : 'bg-white text-label-secondary border-separator hover:text-label-primary'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
             }`}
           >
             All Collections
@@ -204,10 +209,10 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
                 key={c.id}
                 type="button"
                 onClick={() => setSelectedCategoryId(c.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                   isSelected
-                    ? 'bg-action-500 text-white border-action-500 shadow-xs'
-                    : 'bg-white text-label-secondary border-separator hover:text-label-primary'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                 }`}
               >
                 {c.name}
@@ -219,20 +224,29 @@ export const POSPage: React.FC<POSPageProps> = ({ onTryOnProduct }) => {
         {/* Product Grid */}
         <div className="flex-1 overflow-y-auto pr-1">
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="h-64 bg-neutral-200/60 rounded-2xl" />
+                <div key={i} className="h-64 bg-slate-200/70 rounded-2xl animate-pulse" />
               ))}
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="h-64 flex flex-col items-center justify-center text-center">
-              <div className="w-12 h-12 rounded-2xl bg-neutral-100 flex items-center justify-center mb-3">
-                <ShoppingBag className="w-6 h-6 text-label-tertiary" />
+            <div className="h-72 flex flex-col items-center justify-center text-center p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 text-slate-400">
+                <ShoppingBag className="w-6 h-6" />
               </div>
-              <div className="font-semibold text-label-primary text-sm">No products found</div>
-              <p className="text-xs text-label-secondary mt-1">
+              <div className="font-bold text-slate-800 text-base">No products found</div>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs">
                 Try adjusting your category filter or search keywords.
               </p>
+              <button
+                onClick={() => {
+                  setSelectedCategoryId('all');
+                  setSearchQuery('');
+                }}
+                className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+              >
+                Show All Products
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 pb-6">
@@ -354,89 +368,77 @@ const QuickAddCustomerModal: React.FC<QuickAddCustomerModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-panel max-w-sm">
-        <div className="modal-header">
-          <div>
-            <h3 className="modal-title">New Customer</h3>
-            <p className="text-xs text-label-secondary mt-0.5">Quick register for POS receipt & loyalty</p>
+    <Modal open={true} onClose={onClose} title="New Client Registration">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-semibold">
+            {error}
           </div>
-          <button onClick={onClose} className="btn-icon">
-            <X className="w-5 h-5" />
-          </button>
+        )}
+
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-slate-700">Full Name *</label>
+          <input
+            type="text"
+            required
+            placeholder="e.g. Ruwanthi Perera"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body space-y-3.5">
-          {error && (
-            <div className="p-2.5 bg-error-50 border border-error-100 text-error-700 text-xs rounded-xl font-medium">
-              {error}
-            </div>
-          )}
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-slate-700">Mobile Phone (Sri Lanka) *</label>
+          <input
+            type="tel"
+            required
+            placeholder="e.g. 0771234567"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-          <div className="form-group">
-            <label className="input-label">Full Name *</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Ruwanthi Perera"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="input-field"
-            />
-          </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-slate-700">Email (Optional)</label>
+          <input
+            type="email"
+            placeholder="customer@gmail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-          <div className="form-group">
-            <label className="input-label">Mobile Phone (Sri Lanka) *</label>
-            <input
-              type="tel"
-              required
-              placeholder="e.g. 0771234567"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="input-field font-mono"
-            />
-          </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-slate-700">Credit Limit (Rs)</label>
+          <input
+            type="number"
+            placeholder="0"
+            value={creditLimit || ''}
+            onChange={(e) => setCreditLimit(parseFloat(e.target.value) || 0)}
+            className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-          <div className="form-group">
-            <label className="input-label">Email (Optional)</label>
-            <input
-              type="email"
-              placeholder="customer@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="input-label">Store Credit Limit (LKR)</label>
-            <input
-              type="number"
-              placeholder="0"
-              value={creditLimit || ''}
-              onChange={(e) => setCreditLimit(parseFloat(e.target.value) || 0)}
-              className="input-field font-semibold"
-            />
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-secondary flex-1"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-primary flex-1"
-            >
-              {isSubmitting ? 'Saving...' : 'Save & Select'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 min-h-12 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <PressButton
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-md text-xs font-bold flex items-center justify-center"
+          >
+            {isSubmitting ? 'Saving...' : 'Save & Select'}
+          </PressButton>
+        </div>
+      </form>
+    </Modal>
   );
 };

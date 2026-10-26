@@ -92,6 +92,21 @@ export interface Customer {
   createdAt: string;
 }
 
+export interface CustomerCheque {
+  id: string;
+  chequeNumber: string;
+  bankName: string;
+  branchName: string;
+  customerId: string;
+  customerName: string;
+  amount: number;
+  issueDate: string;
+  dueDate: string;
+  status: 'PENDING' | 'DEPOSITED' | 'CLEARED' | 'BOUNCED';
+  invoiceReference?: string;
+  notes?: string;
+}
+
 export interface Supplier {
   id: string;
   name: string;
@@ -100,6 +115,34 @@ export interface Supplier {
   email?: string;
   address?: string;
   outstandingBalance: number;
+  creditTerms?: number;
+  category?: string;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  supplierId: string;
+  supplierName: string;
+  orderDate: string;
+  expectedDeliveryDate: string;
+  status: 'DRAFT' | 'ORDERED' | 'SHIPPED' | 'RECEIVED' | 'CANCELLED';
+  totalAmount: number;
+  paidAmount: number;
+  paymentStatus: 'UNPAID' | 'PARTIAL' | 'PAID';
+  items: PurchaseOrderItem[];
+  deliveryTracking?: string;
+  notes?: string;
+  grnNumber?: string;
 }
 
 export interface SaleItem {
@@ -285,5 +328,47 @@ export interface InventoryInsightItem {
   reason: string;
   suggestedAction: string;
   suggestedActionType: string;
+}
+
+export interface ProductionBatch {
+  id: string;
+  batchCode: string;
+  style: string;
+  category: string;
+  qty: number;
+  due: string;
+  stage: number;
+  late?: boolean;
+  priority: 'NORMAL' | 'EXPEDITE' | 'URGENT';
+  lineOperator: string;
+  fabricRoll: string;
+  yardageAllocated: number;
+  sizeBreakdown: { S: number; M: number; L: number; XL: number };
+  notes?: string;
+  startedAt?: string;
+}
+
+export interface SaleReturnItem {
+  id: string;
+  saleItemId: string;
+  variantId: string;
+  productName?: string;
+  variantDetails?: string;
+  quantity: number;
+  refundAmount: number;
+}
+
+export interface SaleReturn {
+  id: string;
+  returnNumber: string;
+  saleId: string;
+  invoiceNumber: string;
+  customerName?: string;
+  returnDate: string;
+  reason: string;
+  disposition: 'RESTOCK' | 'DAMAGED' | 'INSPECTION';
+  totalRefund: number;
+  notes?: string;
+  items: SaleReturnItem[];
 }
 

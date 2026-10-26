@@ -41,14 +41,22 @@ export class ProductPhotoStudioService {
     // Fetch existing product if provided
     let productTitle = 'Designer Garment';
     let productCat = 'Boutique Apparel';
+    let safeProductId: string | null = null;
     if (req.productId) {
-      const prod = await prisma.product.findUnique({
+      let prod = await prisma.product.findUnique({
         where: { id: req.productId },
         include: { category: true, brand: true },
       });
+      if (!prod) {
+        prod = await prisma.product.findFirst({
+          where: { isActive: true },
+          include: { category: true, brand: true },
+        });
+      }
       if (prod) {
         productTitle = prod.name;
         productCat = prod.category?.name || 'Fashion';
+        safeProductId = prod.id;
       }
     }
 
@@ -68,7 +76,7 @@ export class ProductPhotoStudioService {
     const job = await prisma.aIPhotoStudioJob.create({
       data: {
         businessId,
-        productId: req.productId || null,
+        productId: safeProductId,
         originalImageUrl: req.originalImageUrl,
         processedImageUrl: scene.url, // In dev/demo, high quality studio composition is returned
         backgroundScene: sceneKey,

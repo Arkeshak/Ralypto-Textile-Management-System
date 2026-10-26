@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Trash2,
   Plus,
@@ -8,13 +8,30 @@ import {
   ShoppingBag,
   Percent,
 } from 'lucide-react';
+import { animate } from 'framer-motion';
 import { useCartStore } from '../../stores/cart.store';
 import { Customer } from '../../types';
+import { AnimatedList, AnimatedRow, PressButton } from '../../lib/motion';
 
 interface CartPanelProps {
   customers: Customer[];
   onOpenPayment: () => void;
   onOpenNewCustomer: () => void;
+}
+
+function AnimatedTotal({ value }: { value: number }) {
+  const [display, setDisplay] = useState(value);
+
+  useEffect(() => {
+    const controls = animate(display, value, {
+      duration: 0.3,
+      ease: 'easeOut',
+      onUpdate: (latest) => setDisplay(Math.round(latest)),
+    });
+    return () => controls.stop();
+  }, [value]);
+
+  return <span>Rs {display.toLocaleString()}</span>;
 }
 
 export const CartPanel: React.FC<CartPanelProps> = ({
@@ -56,19 +73,19 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   );
 
   return (
-    <div className="card h-full flex flex-col overflow-hidden">
+    <div className="card h-full flex flex-col overflow-hidden bg-white rounded-2xl border border-slate-200 shadow-sm">
       {/* 1. Customer Selector Topbar */}
-      <div className="p-3.5 border-b border-separator bg-surface-secondary/60">
+      <div className="p-3.5 border-b border-slate-200 bg-slate-50/80">
         <div className="relative">
           <div className="flex items-center justify-between gap-2">
             <div className="flex-1 relative">
               <div
                 onClick={() => setShowCustomerDropdown(true)}
-                className="w-full flex items-center justify-between px-3 py-2 bg-white border border-separator rounded-xl text-xs font-semibold text-label-primary cursor-pointer hover:border-action-500 transition-colors shadow-2xs"
+                className="w-full flex items-center justify-between px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 cursor-pointer hover:border-blue-500 transition-colors shadow-2xs"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <div className="w-5 h-5 rounded-full bg-action-50 text-action-600 flex items-center justify-center shrink-0">
-                    <User className="w-3 h-3" />
+                  <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <User className="w-3.5 h-3.5" />
                   </div>
                   <span className="truncate">
                     {selectedCustomer
@@ -77,7 +94,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                   </span>
                 </div>
                 {selectedCustomer && (
-                  <span className="badge badge-action">
+                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-2xs font-bold">
                     {selectedCustomer.loyaltyPoints} pts
                   </span>
                 )}
@@ -88,7 +105,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
               <button
                 type="button"
                 onClick={() => setCustomer(null)}
-                className="btn-ghost btn-sm !px-2.5 text-label-secondary"
+                className="px-2.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800"
                 title="Clear selected customer"
               >
                 Clear
@@ -97,7 +114,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
               <button
                 type="button"
                 onClick={onOpenNewCustomer}
-                className="btn-secondary btn-sm !px-2.5 whitespace-nowrap"
+                className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold whitespace-nowrap transition-colors"
               >
                 + Client
               </button>
@@ -108,26 +125,26 @@ export const CartPanel: React.FC<CartPanelProps> = ({
           {showCustomerDropdown && (
             <>
               <div
-                className="fixed inset-0 z-30"
+                className="fixed inset-0 z-40"
                 onClick={() => setShowCustomerDropdown(false)}
               />
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-separator rounded-2xl shadow-xl z-40 p-2.5 space-y-1.5 animate-slide-up">
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-2 space-y-1">
                 <input
                   type="text"
-                  placeholder="Search customer name or phone..."
+                  placeholder="Search client by name or phone..."
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
-                  className="input-field text-xs py-1.5"
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                 />
-                <div className="max-h-48 overflow-y-auto divide-y divide-separator/40 py-1">
+                <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 py-1">
                   <button
                     type="button"
                     onClick={() => {
                       setCustomer(null);
                       setShowCustomerDropdown(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-label-primary hover:bg-surface-secondary rounded-lg flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 rounded-lg flex items-center justify-between"
                   >
                     <span>Walk-in Customer (Default)</span>
                   </button>
@@ -139,17 +156,17 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                         setCustomer(c);
                         setShowCustomerDropdown(false);
                       }}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-surface-secondary rounded-lg transition-colors flex items-center justify-between"
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 rounded-lg transition-colors flex items-center justify-between"
                     >
                       <div>
-                        <div className="font-semibold text-label-primary">{c.name}</div>
-                        <div className="text-2xs text-label-tertiary">{c.phone}</div>
+                        <div className="font-bold text-slate-800">{c.name}</div>
+                        <div className="text-[11px] text-slate-400">{c.phone}</div>
                       </div>
-                      <div className="text-right text-2xs">
-                        <span className="text-success-600 font-semibold">{c.loyaltyPoints} pts</span>
+                      <div className="text-right text-[11px]">
+                        <span className="text-emerald-600 font-bold">{c.loyaltyPoints} pts</span>
                         {c.outstandingBalance > 0 && (
-                          <div className="text-error-600 font-bold tabular-nums">
-                            Due: LKR {c.outstandingBalance.toLocaleString()}
+                          <div className="text-red-600 font-bold tabular-nums">
+                            Due: Rs {c.outstandingBalance.toLocaleString()}
                           </div>
                         )}
                       </div>
@@ -162,36 +179,36 @@ export const CartPanel: React.FC<CartPanelProps> = ({
         </div>
       </div>
 
-      {/* 2. Cart Items List */}
+      {/* 2. Cart Items List with AnimatedList + AnimatedRow */}
       <div className="flex-1 overflow-y-auto p-3.5 space-y-2">
         {items.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-label-tertiary">
-            <div className="w-12 h-12 rounded-2xl bg-surface-secondary flex items-center justify-center mb-3">
-              <ShoppingBag className="w-6 h-6 text-label-tertiary" />
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
+              <ShoppingBag className="w-7 h-7 text-slate-400" />
             </div>
-            <h4 className="text-sm font-semibold text-label-primary mb-1">Cart is Empty</h4>
-            <p className="text-xs text-label-secondary max-w-[200px]">
-              Scan a barcode or tap on any clothing garment to ring up a sale.
+            <h4 className="text-base font-bold text-slate-800 mb-1">Cart is Empty</h4>
+            <p className="text-xs text-slate-500 max-w-[220px]">
+              Scan barcode or tap garment cards to ring up sale items.
             </p>
 
             {/* Held carts banner */}
             {heldCarts.length > 0 && (
-              <div className="mt-6 w-full p-3 bg-warning-50 border border-warning-100 rounded-xl text-left">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-warning-700 mb-2">
-                  <PauseCircle className="w-4 h-4 text-warning-600" />
+              <div className="mt-6 w-full p-3 bg-amber-50 border border-amber-200 rounded-xl text-left">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 mb-2">
+                  <PauseCircle className="w-4 h-4 text-amber-600" />
                   <span>Held Orders ({heldCarts.length})</span>
                 </div>
                 {heldCarts.map((h) => (
                   <div
                     key={h.id}
-                    className="flex items-center justify-between text-xs py-1 border-t border-warning-200/60 first:border-0"
+                    className="flex items-center justify-between text-xs py-1 border-t border-amber-200/60 first:border-0"
                   >
-                    <span className="font-medium text-warning-800 truncate">
+                    <span className="font-semibold text-amber-900 truncate">
                       {h.customer?.name || 'Walk-in'} ({h.items.length} items)
                     </span>
                     <button
                       onClick={() => recallCart(h.id)}
-                      className="px-2 py-0.5 rounded bg-warning-600 text-white font-bold text-2xs hover:bg-warning-700"
+                      className="px-2.5 py-1 rounded bg-amber-600 text-white font-bold text-xs hover:bg-amber-700"
                     >
                       Recall
                     </button>
@@ -201,125 +218,123 @@ export const CartPanel: React.FC<CartPanelProps> = ({
             )}
           </div>
         ) : (
-          items.map((item) => (
-            <div
-              key={item.variantId}
-              className="p-3 bg-surface-secondary/50 border border-separator/80 rounded-xl space-y-2 hover:border-separator transition-colors"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h4 className="text-xs font-semibold text-label-primary leading-snug">
-                    {item.productName}
-                  </h4>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="badge badge-action !text-3xs">
-                      {item.size}
-                    </span>
-                    <span className="badge badge-neutral !text-3xs flex items-center gap-1">
-                      {item.colorHex && (
-                        <span
-                          className="w-1.5 h-1.5 rounded-full border border-separator"
-                          style={{ backgroundColor: item.colorHex }}
-                        />
-                      )}
-                      {item.color}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => removeItem(item.variantId)}
-                  className="text-label-tertiary hover:text-error-600 p-1 transition-colors"
-                  title="Remove item"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Price, Quantity, Line Total */}
-              <div className="flex items-center justify-between pt-1 border-t border-separator/40">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                    className="w-6 h-6 rounded-lg bg-white border border-separator flex items-center justify-center text-label-secondary hover:text-label-primary active:scale-95 transition-all"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <span className="w-6 text-center text-xs font-bold text-label-primary tabular-nums">
-                    {item.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={item.quantity >= item.stockOnHand}
-                    onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                    className="w-6 h-6 rounded-lg bg-white border border-separator disabled:opacity-40 flex items-center justify-center text-label-secondary hover:text-label-primary active:scale-95 transition-all"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                  <span className="text-2xs text-label-tertiary ml-1 tabular-nums">
-                    @ LKR {item.unitPrice.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-xs font-bold text-label-primary tabular-nums">
-                    LKR {(item.unitPrice * item.quantity - item.discountAmount).toLocaleString()}
-                  </div>
-                  {item.discountAmount > 0 && (
-                    <div className="text-3xs text-success-600 font-semibold tabular-nums">
-                      -LKR {item.discountAmount.toLocaleString()}
+          <AnimatedList>
+            {items.map((item) => (
+              <AnimatedRow key={item.variantId} className="mb-2">
+                <div className="p-3 bg-slate-50/70 border border-slate-200/80 rounded-xl space-y-2 hover:border-slate-300 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 leading-snug">
+                        {item.productName}
+                      </h4>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-bold">
+                          {item.size}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1">
+                          {item.colorHex && (
+                            <span
+                              className="w-2 h-2 rounded-full inline-block border border-slate-300"
+                              style={{ backgroundColor: item.colorHex }}
+                            />
+                          )}
+                          {item.color}
+                        </span>
+                      </div>
                     </div>
-                  )}
+
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.variantId)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Remove item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center border border-slate-200 rounded-lg bg-white shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
+                          className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-l-lg transition-colors"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="w-8 text-center text-xs font-bold text-slate-900 tabular-nums">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                          className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-r-lg transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-xs font-extrabold text-slate-900 tabular-nums">
+                        Rs {((item.unitPrice * item.quantity) - item.discountAmount).toLocaleString()}
+                      </div>
+                      {item.discountAmount > 0 && (
+                        <div className="text-[10px] text-emerald-600 font-bold tabular-nums">
+                          -Rs {item.discountAmount.toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))
+              </AnimatedRow>
+            ))}
+          </AnimatedList>
         )}
       </div>
 
       {/* 3. Financial Summary & Checkout Action */}
       {items.length > 0 && (
-        <div className="p-4 border-t border-separator bg-surface-secondary/40 space-y-3">
+        <div className="p-4 border-t border-slate-200 bg-slate-50/60 space-y-3">
           {/* Quick hold & clear */}
-          <div className="flex items-center justify-between text-2xs font-semibold text-label-secondary">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
             <button
               onClick={holdCurrentCart}
-              className="flex items-center gap-1 hover:text-warning-600 transition-colors"
+              className="flex items-center gap-1 hover:text-amber-600 transition-colors"
             >
-              <PauseCircle className="w-3.5 h-3.5" />
+              <PauseCircle className="w-4 h-4" />
               <span>Hold Cart</span>
             </button>
             <button
               onClick={clearCart}
-              className="flex items-center gap-1 hover:text-error-600 transition-colors"
+              className="flex items-center gap-1 hover:text-red-600 transition-colors"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4" />
               <span>Clear</span>
             </button>
           </div>
 
           {/* Subtotal & Discounts */}
           <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between text-label-secondary">
+            <div className="flex justify-between text-slate-600 font-medium">
               <span>Subtotal ({totalUnits} items)</span>
-              <span className="font-semibold text-label-primary tabular-nums">LKR {subtotal.toLocaleString()}</span>
+              <span className="font-bold text-slate-900 tabular-nums">Rs {subtotal.toLocaleString()}</span>
             </div>
 
-            <div className="flex justify-between text-label-secondary items-center">
+            <div className="flex justify-between text-slate-600 items-center">
               <span className="flex items-center gap-1">
                 <span>Discount</span>
                 <button
                   type="button"
                   onClick={() => setShowOverallDiscountInput(!showOverallDiscountInput)}
-                  className="text-action-500 hover:underline font-semibold text-2xs"
+                  className="text-blue-600 hover:underline font-bold text-xs"
                 >
-                  {overallDiscount > 0 ? `LKR ${overallDiscount}` : '+ Add'}
+                  {overallDiscount > 0 ? `Rs ${overallDiscount}` : '+ Add'}
                 </button>
               </span>
-              <span className="font-semibold text-success-600 tabular-nums">
-                -LKR {discounts.toLocaleString()}
+              <span className="font-bold text-emerald-600 tabular-nums">
+                -Rs {discounts.toLocaleString()}
               </span>
             </div>
 
@@ -327,32 +342,35 @@ export const CartPanel: React.FC<CartPanelProps> = ({
               <div className="pt-1">
                 <input
                   type="number"
-                  placeholder="Discount in LKR"
+                  placeholder="Discount in Rs"
                   value={overallDiscount || ''}
                   onChange={(e) => setOverallDiscount(parseFloat(e.target.value) || 0)}
-                  className="input-field text-xs py-1"
+                  className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             )}
 
-            <div className="flex justify-between items-baseline pt-2 border-t border-separator/80">
-              <span className="text-xs font-bold text-label-primary">Total Payable</span>
-              <span className="text-lg font-bold text-action-600 tabular-nums">LKR {grandTotal.toLocaleString()}</span>
+            <div className="flex justify-between items-baseline pt-2 border-t border-slate-200">
+              <span className="text-xs font-bold text-slate-800">Total Payable</span>
+              <span className="text-xl font-black text-blue-600 tabular-nums">
+                <AnimatedTotal value={grandTotal} />
+              </span>
             </div>
           </div>
 
-          {/* Checkout Button */}
-          <button
+          {/* Primary Checkout Button (Min 48px) */}
+          <PressButton
             type="button"
             onClick={onOpenPayment}
-            className="btn-primary w-full !py-3 text-sm flex items-center justify-center gap-2 shadow-sm"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md flex items-center justify-center gap-2"
           >
             <span>Proceed to Payment</span>
             <span>&bull;</span>
-            <span className="tabular-nums">LKR {grandTotal.toLocaleString()}</span>
-          </button>
+            <AnimatedTotal value={grandTotal} />
+          </PressButton>
         </div>
       )}
     </div>
   );
 };
+export default CartPanel;

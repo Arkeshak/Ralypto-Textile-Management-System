@@ -5,11 +5,10 @@ import {
   ShoppingBag,
   ChevronDown,
   Check,
-  Wifi,
-  Search,
   RotateCcw,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
+import { OnlineBadge } from '../../lib/motion';
 
 interface HeaderProps {
   onToggleMobileMenu: () => void;
@@ -25,8 +24,24 @@ export const Header: React.FC<HeaderProps> = ({
   const { branches, activeBranchId, setActiveBranch, business } = useAuthStore();
   const [showBranchMenu, setShowBranchMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+  const [isOnline, setIsOnline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
 
   const activeBranch = branches.find((b) => b.id === activeBranchId) || branches[0];
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -64,11 +79,8 @@ export const Header: React.FC<HeaderProps> = ({
           <h1 className="text-base font-semibold text-label-primary tracking-tight truncate leading-tight">
             {title}
           </h1>
-          <div className="hidden sm:flex items-center gap-1.5 text-2xs text-label-secondary mt-0.5">
-            <span className="font-medium">{business?.currency || 'LKR'}</span>
-            <span className="text-separator">·</span>
-            <Wifi strokeWidth={2} className="w-2.5 h-2.5 text-success-500" />
-            <span>Online</span>
+          <div className="hidden sm:flex items-center gap-2 text-xs text-label-secondary mt-0.5">
+            <span className="font-semibold text-slate-700">{business?.currency || 'Rs'}</span>
             <span className="text-separator">·</span>
             <span className="font-mono">{currentTime}</span>
           </div>
@@ -76,7 +88,8 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right: Controls */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-3 shrink-0">
+        <OnlineBadge online={isOnline} />
         {/* Branch Selector */}
         {branches.length > 0 && (
           <div className="relative hidden sm:block">

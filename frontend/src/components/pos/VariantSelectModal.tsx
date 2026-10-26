@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Check, ShoppingBag, AlertCircle, Sparkles } from 'lucide-react';
-import { Product, ProductVariant } from '../../types';
+import { ShoppingBag, AlertCircle, Sparkles, Check } from 'lucide-react';
+import { Product } from '../../types';
 import { useCartStore } from '../../stores/cart.store';
+import { Modal, PressButton } from '../../lib/motion';
 
 interface VariantSelectModalProps {
   product: Product | null;
@@ -58,161 +59,126 @@ export const VariantSelectModal: React.FC<VariantSelectModalProps> = ({
       colorHex: activeVariant.colorHex,
       unitPrice: activeVariant.sellingPrice,
       unitCost: activeVariant.costPrice,
-      stockOnHand,
+      stockOnHand: activeVariant.stockOnHand ?? 10,
       imageUrl: product.imageUrl,
     });
 
-    if (!success) {
-      setErrorMsg(`Cannot add more. Reached maximum available stock (${stockOnHand}).`);
-      return;
+    if (success) {
+      onAdded();
+      onClose();
+    } else {
+      setErrorMsg('Failed to add item to cart. Stock limit reached.');
     }
-
-    onAdded();
-    onClose();
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-panel max-w-md">
-        {/* Header */}
-        <div className="modal-header">
-          <div className="flex gap-3">
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="w-12 h-12 rounded-xl object-cover border border-separator bg-surface-secondary shrink-0 shadow-2xs"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-xl bg-surface-secondary border border-separator flex items-center justify-center text-label-tertiary text-xl shrink-0">
-                👗
-              </div>
-            )}
-            <div>
-              <span className="badge badge-action !text-3xs mb-0.5">
-                {product.category?.name || 'Garment'}
-              </span>
-              <h3 className="modal-title leading-tight line-clamp-1">
-                {product.name}
-              </h3>
-              <div className="text-2xs text-label-secondary font-medium">
-                {product.brand?.name || 'In-House Collection'}
-              </div>
-            </div>
+    <Modal open={Boolean(product)} onClose={onClose} title={product.name}>
+      <div className="space-y-4">
+        {errorMsg && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700 text-xs font-semibold">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
           </div>
-          <button onClick={onClose} className="btn-icon">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        )}
 
-        {/* Variant Selection Form */}
-        <div className="modal-body space-y-4">
-          {errorMsg && (
-            <div className="p-3 bg-error-50 border border-error-100 rounded-xl flex items-center gap-2 text-error-700 text-xs font-medium">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Size Selector */}
-          <div>
-            <label className="section-label mb-2 block">
-              Select Size
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {sizes.map((s) => {
-                const isSelected = selectedSize === s;
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => {
-                      setSelectedSize(s);
-                      setErrorMsg(null);
-                    }}
-                    className={`min-w-10 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
-                      isSelected
-                        ? 'bg-action-500 text-white border-action-500 shadow-sm'
-                        : 'bg-white text-label-secondary border-separator hover:text-label-primary hover:bg-neutral-50'
-                    }`}
-                  >
-                    {s}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Color Selector */}
-          <div>
-            <label className="section-label mb-2 block">
-              Select Colour
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {colors.map((c) => {
-                const isSelected = selectedColor === c;
-                const variantForColor = product.variants?.find((v) => v.color === c);
-                const hex = variantForColor?.colorHex || '#1E293B';
-
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => {
-                      setSelectedColor(c);
-                      setErrorMsg(null);
-                    }}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium border transition-all ${
-                      isSelected
-                        ? 'border-action-500 bg-action-50/50 text-label-primary font-semibold ring-2 ring-action-500/20'
-                        : 'border-separator bg-white hover:bg-neutral-50 text-label-secondary hover:text-label-primary'
-                    }`}
-                  >
-                    <span
-                      className="w-3.5 h-3.5 rounded-full border border-separator shadow-2xs shrink-0"
-                      style={{ backgroundColor: hex }}
-                    />
-                    <span className="truncate">{c}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 ml-auto text-action-500" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Details & Stock Box */}
-          <div className="p-3.5 rounded-xl bg-surface-secondary border border-separator flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="text-2xs text-label-tertiary">
-                SKU: <span className="font-mono text-label-primary font-semibold">{activeVariant?.sku || 'N/A'}</span>
-              </div>
-              <div className="text-2xs text-label-tertiary">
-                Barcode: <span className="font-mono text-label-secondary">{activeVariant?.barcode || 'N/A'}</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-bold text-label-primary tabular-nums">
-                LKR {(activeVariant?.sellingPrice || product.basePrice).toLocaleString()}
-              </div>
-              <div className="mt-0.5">
-                <span
-                  className={`badge ${
-                    isOutOfStock
-                      ? 'badge-error'
-                      : stockOnHand <= 3
-                      ? 'badge-warning'
-                      : 'badge-success'
+        {/* Size Selector */}
+        <div>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+            Select Size
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((s) => {
+              const isSelected = selectedSize === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    setSelectedSize(s);
+                    setErrorMsg(null);
+                  }}
+                  className={`min-w-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    isSelected
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                   }`}
                 >
-                  {isOutOfStock ? 'Out of stock' : `${stockOnHand} in stock`}
-                </span>
-              </div>
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Color Selector */}
+        <div>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+            Select Colour
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {colors.map((c) => {
+              const isSelected = selectedColor === c;
+              const variantForColor = product.variants?.find((v) => v.color === c);
+              const hex = variantForColor?.colorHex || '#1E293B';
+
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => {
+                    setSelectedColor(c);
+                    setErrorMsg(null);
+                  }}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    isSelected
+                      ? 'border-blue-600 bg-blue-50 text-blue-900 ring-2 ring-blue-500/20'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  <span
+                    className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-xs shrink-0"
+                    style={{ backgroundColor: hex }}
+                  />
+                  <span className="truncate">{c}</span>
+                  {isSelected && <Check className="w-3.5 h-3.5 ml-auto text-blue-600" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Details & Stock Box */}
+        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+          <div className="space-y-0.5">
+            <div className="text-[11px] text-slate-500">
+              SKU: <span className="font-mono text-slate-800 font-bold">{activeVariant?.sku || 'N/A'}</span>
+            </div>
+            <div className="text-[11px] text-slate-500">
+              Barcode: <span className="font-mono text-slate-700">{activeVariant?.barcode || 'N/A'}</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-extrabold text-slate-900 tabular-nums">
+              Rs {(activeVariant?.sellingPrice || product.basePrice).toLocaleString()}
+            </div>
+            <div className="mt-0.5">
+              <span
+                className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  isOutOfStock
+                    ? 'bg-red-100 text-red-700'
+                    : stockOnHand <= 3
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-emerald-100 text-emerald-800'
+                }`}
+              >
+                {isOutOfStock ? 'Out of stock' : `${stockOnHand} in stock`}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="modal-footer">
+        {/* Modal Actions */}
+        <div className="flex gap-2 pt-2">
           {onTryOn && (
             <button
               type="button"
@@ -221,30 +187,30 @@ export const VariantSelectModal: React.FC<VariantSelectModalProps> = ({
                 onClose();
                 onTryOn(prod);
               }}
-              className="btn-secondary text-action-600 bg-action-50 border-action-100"
+              className="px-3 py-2 rounded-xl text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-xs font-bold flex items-center gap-1.5 transition-colors"
             >
-              <Sparkles className="w-3.5 h-3.5 text-action-500" />
+              <Sparkles className="w-3.5 h-3.5" />
               <span>Try-On</span>
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
-            className="btn-secondary flex-1"
+            className="flex-1 min-h-12 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
           >
             Cancel
           </button>
-          <button
+          <PressButton
             type="button"
             disabled={isOutOfStock || !activeVariant}
             onClick={handleAddToCart}
-            className="btn-primary flex-1"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white shadow-md flex items-center justify-center gap-1.5 text-xs font-bold"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>Add to Cart</span>
-          </button>
+          </PressButton>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };

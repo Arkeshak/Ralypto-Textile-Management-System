@@ -23,6 +23,92 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
     if (cleanUrl === '/dashboard/metrics') {
       return { success: true, data: demoStore.getDashboardMetrics() };
     }
+    if (cleanUrl === '/ai/info') {
+      return {
+        success: true,
+        data: {
+          name: 'development-mode',
+          provider: 'Development AI (Simulated)',
+          isDevelopmentMode: true,
+          isConfigured: false,
+          remainingGenerationsToday: 50,
+          supportedCategories: ['dresses', 'tops', 'bottoms', 'one-pieces'],
+          costPerGenerationLkr: 0,
+          disclaimer:
+            'AI Virtual Try-On generates visual approximations. Variations in real-world fabric texture, draping, and exact body measurements may occur.',
+        },
+      };
+    }
+    if (cleanUrl === '/ai/try-on/history') {
+      return {
+        success: true,
+        data: [
+          {
+            id: 'demo-job-hist-1',
+            status: 'COMPLETED',
+            personImageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800',
+            garmentImageUrl: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800',
+            resultImageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000',
+            createdAt: new Date().toISOString(),
+            product: { name: 'Royal Emerald Chiffon Dress', basePrice: 12500 },
+          },
+        ],
+      };
+    }
+    if (cleanUrl.startsWith('/ai/try-on/')) {
+      const jobId = cleanUrl.split('/').pop();
+      return {
+        success: true,
+        data: {
+          id: jobId,
+          status: 'COMPLETED',
+          personImageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800',
+          garmentImageUrl: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800',
+          resultImageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000',
+          createdAt: new Date().toISOString(),
+          provider: 'development-mode',
+          cost: 0,
+          product: { name: 'Selected Fashion Garment', basePrice: 8500 },
+        },
+      };
+    }
+    if (cleanUrl === '/ai/inventory-insights') {
+      return {
+        success: true,
+        data: {
+          insights: [
+            {
+              id: 'ins-1',
+              title: 'Impending Stockout: Emerald Chiffon Saree Fabric',
+              severity: 'high',
+              category: 'Stock Velocity',
+              description: 'Weekly sales velocity has surged 180% due to upcoming wedding season.',
+              recommendation: 'Reorder 250 meters from Royal Weaves Mill within 3 days.',
+              affectedSku: 'SKU-EMR-01',
+            },
+            {
+              id: 'ins-2',
+              title: 'Trending Occasion: Avurudu Linen Tops',
+              severity: 'medium',
+              category: 'Demand Forecast',
+              description: 'Seasonal trend indicates 3.4x demand spike over the next 14 days.',
+              recommendation: 'Pre-cut 40 rolls into standard M and L sizing.',
+              affectedSku: 'SKU-LIN-04',
+            },
+            {
+              id: 'ins-3',
+              title: 'Slow Moving Deadstock: Heavy Wool Blazer',
+              severity: 'low',
+              category: 'Deadstock Clearance',
+              description: 'Zero units sold in 45 days. High capital lockup in Colombo weather.',
+              recommendation: 'Bundle with silk pocket square at 20% discount or transfer to Nuwara Eliya store.',
+              affectedSku: 'SKU-WOL-02',
+            },
+          ],
+          metadata: { generatedAt: new Date().toISOString(), dataPointsAnalyzed: 94 },
+        },
+      };
+    }
     if (cleanUrl === '/products') {
       return { success: true, data: demoStore.getProducts() };
     }
@@ -30,13 +116,16 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
       return { success: true, data: demoStore.getCategories() };
     }
     if (cleanUrl === '/brands') {
-      return { success: true, data: DEMO_BRANDS };
+      return { success: true, data: demoStore.getBrands() };
     }
     if (cleanUrl === '/customers') {
       return { success: true, data: demoStore.getCustomers() };
     }
     if (cleanUrl === '/suppliers') {
       return { success: true, data: demoStore.getSuppliers() };
+    }
+    if (cleanUrl === '/purchase-orders') {
+      return { success: true, data: [] };
     }
     if (cleanUrl === '/expenses') {
       const expenses = demoStore.getExpenses();
@@ -45,6 +134,59 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
     }
     if (cleanUrl === '/sales') {
       return { success: true, data: demoStore.getSales() };
+    }
+    if (cleanUrl === '/returns') {
+      return {
+        success: true,
+        data: [
+          {
+            id: 'ret-1',
+            returnNumber: 'RET-2026-042',
+            saleId: 'sale-today-01',
+            invoiceNumber: 'INV-2026-0842',
+            customerName: 'Dilani Perera',
+            returnDate: '2026-10-24',
+            reason: 'Wrong size selected (requested L instead of M)',
+            disposition: 'RESTOCK',
+            totalRefund: 5450,
+            notes: 'Exchanged for Size L; original tags intact.',
+            items: [
+              {
+                id: 'reti-1',
+                saleItemId: 'item-1',
+                variantId: 'var-01-m',
+                productName: 'Floral Chiffon Tiered Maxi Dress',
+                variantDetails: 'M / Blush Pink',
+                quantity: 1,
+                refundAmount: 5450,
+              },
+            ],
+          },
+          {
+            id: 'ret-2',
+            returnNumber: 'RET-2026-039',
+            saleId: 'sale-prev-04',
+            invoiceNumber: 'INV-2026-0812',
+            customerName: 'Dinuka Senanayake',
+            returnDate: '2026-10-21',
+            reason: 'Fit adjustment required for bridal ensemble',
+            disposition: 'RESTOCK',
+            totalRefund: 7950,
+            notes: 'Store credit issued to customer account.',
+            items: [
+              {
+                id: 'reti-2',
+                saleItemId: 'item-2',
+                variantId: 'var-02-s',
+                productName: 'Emerald Green Silk Wrap Dress',
+                variantDetails: 'S / Emerald Green',
+                quantity: 1,
+                refundAmount: 7950,
+              },
+            ],
+          },
+        ],
+      };
     }
     if (cleanUrl === '/staff') {
       return { success: true, data: DEMO_STAFF };
@@ -232,6 +374,25 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
       return { success: true, data: newSale };
     }
 
+    if (cleanUrl === '/returns') {
+      const returnNumber = `RET-2026-${Math.floor(100 + Math.random() * 900)}`;
+      const totalRefund = (body.items || []).reduce((acc: number, it: any) => acc + (it.refundAmount || 0), 0);
+      const newReturn = {
+        id: `ret-${Date.now()}`,
+        returnNumber,
+        saleId: body.saleId,
+        invoiceNumber: body.invoiceNumber || 'INV-2026-0842',
+        customerName: body.customerName || 'Walk-in Client',
+        returnDate: new Date().toISOString().split('T')[0],
+        reason: body.reason || 'Customer Return',
+        disposition: body.disposition || 'RESTOCK',
+        totalRefund,
+        notes: body.notes || 'Counter return voucher',
+        items: body.items || [],
+      };
+      return { success: true, data: newReturn, message: 'Return processed successfully' };
+    }
+
     if (cleanUrl === '/customers') {
       const newCustomer = {
         id: `cust-${Date.now()}`,
@@ -249,6 +410,30 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
       return { success: true, data: newCustomer };
     }
 
+    if (cleanUrl === '/suppliers') {
+      const newSupplier = {
+        id: `sup-${Date.now()}`,
+        name: body.name || 'New Mill Supplier',
+        contactPerson: body.contactPerson || '',
+        phone: body.phone || '0770000000',
+        email: body.email,
+        address: body.address,
+        outstandingBalance: Number(body.outstandingBalance) || 0,
+        creditTerms: Number(body.creditTerms) || 30,
+        category: body.category || 'Fabric Mill',
+      };
+      demoStore.addSupplier(newSupplier as any);
+      return { success: true, data: newSupplier };
+    }
+
+    if (cleanUrl.startsWith('/suppliers/') && cleanUrl.endsWith('/pay')) {
+      const parts = cleanUrl.split('/');
+      const supplierId = parts[2];
+      const amount = Number(body.amount) || 0;
+      const updated = demoStore.recordSupplierPayment(supplierId, amount);
+      return { success: true, data: updated, message: 'Supplier payment recorded' };
+    }
+
     if (cleanUrl === '/expenses') {
       const newExp = {
         id: `exp-${Date.now()}`,
@@ -261,6 +446,29 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
       };
       demoStore.addExpense(newExp as any);
       return { success: true, data: newExp };
+    }
+
+    if (cleanUrl === '/categories') {
+      const newCategory = {
+        id: `cat-${Date.now()}`,
+        name: body.name || 'New Category',
+        slug: body.slug || (body.name || 'category').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: body.description || '',
+        _count: { products: 0 },
+      };
+      demoStore.addCategory(newCategory as any);
+      return { success: true, data: newCategory };
+    }
+
+    if (cleanUrl === '/brands') {
+      const newBrand = {
+        id: `br-${Date.now()}`,
+        name: body.name || 'New Brand',
+        slug: body.slug || (body.name || 'brand').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: body.description || '',
+      };
+      demoStore.addBrand(newBrand as any);
+      return { success: true, data: newBrand };
     }
 
     if (cleanUrl === '/products') {
@@ -295,6 +503,128 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
       };
       demoStore.addProduct(newProd as any);
       return { success: true, data: newProd };
+    }
+
+    if (cleanUrl === '/ai/try-on') {
+      const selectedProd =
+        demoStore.getProducts().find((p) => p.id === body.productId) || demoStore.getProducts()[0];
+      return {
+        success: true,
+        message: 'Virtual try-on job submitted successfully.',
+        data: {
+          id: `job-${Date.now()}`,
+          status: 'COMPLETED',
+          personImageUrl:
+            body.personImage ||
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800',
+          garmentImageUrl:
+            selectedProd?.imageUrl ||
+            'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800',
+          resultImageUrl:
+            'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000',
+          provider: 'development-mode',
+          cost: 0,
+          createdAt: new Date().toISOString(),
+          product: {
+            name: selectedProd?.name || 'Designer Dress',
+            basePrice: selectedProd?.basePrice || 7500,
+          },
+        },
+      };
+    }
+
+    if (cleanUrl === '/ai/stylist/recommend') {
+      return {
+        success: true,
+        data: {
+          outfits: [
+            {
+              id: 'outfit-demo-1',
+              theme: 'Sri Lankan Wedding & Evening Gala',
+              description:
+                'Exquisite royal drape ensemble with shimmering gold highlights and complementary silk drape.',
+              totalPrice: 18500,
+              stylingTip:
+                'Pair with metallic gold or antique brass jewellery and delicate kitten heels.',
+              items: demoStore
+                .getProducts()
+                .slice(0, 2)
+                .map((p) => ({
+                  productId: p.id,
+                  productName: p.name,
+                  category: p.category?.name || 'Fashion',
+                  price: p.basePrice,
+                  imageUrl: p.imageUrl,
+                  role: 'Centerpiece Dress',
+                })),
+            },
+            {
+              id: 'outfit-demo-2',
+              theme: 'Contemporary Colombo Executive',
+              description:
+                'Elevated comfort tailored in pure breathable linen, perfect for tropical boardroom meetings.',
+              totalPrice: 14200,
+              stylingTip:
+                'Match with a minimalist leather tote and classic watch.',
+              items: demoStore
+                .getProducts()
+                .slice(2, 4)
+                .map((p) => ({
+                  productId: p.id,
+                  productName: p.name,
+                  category: p.category?.name || 'Formal',
+                  price: p.basePrice,
+                  imageUrl: p.imageUrl,
+                  role: 'Tailored Linen Attire',
+                })),
+            },
+          ],
+          appliedFilters: {
+            occasion: body.occasion || 'Sri Lankan Wedding Guest',
+            budget: body.maxBudgetLkr || 25000,
+            availableProductCount: demoStore.getProducts().length,
+          },
+        },
+      };
+    }
+
+    if (cleanUrl === '/ai/photo-studio/process') {
+      return {
+        success: true,
+        data: {
+          id: `photo-job-${Date.now()}`,
+          status: 'COMPLETED',
+          originalImageUrl:
+            body.originalImageUrl ||
+            'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800',
+          processedImageUrl:
+            'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=1200&auto=format&fit=crop&q=80',
+          backgroundScene: body.backgroundScene || 'COLOMBO_BOUTIQUE',
+          generatedTitle: 'Designer Silk Floral Gown — Colombo Boutique Edition',
+          generatedDescription:
+            'Exquisitely crafted in Sri Lanka, this designer gown embodies timeless tropical elegance. Features reinforced fine stitching, premium fabric drape, and flattering tailored silhouette.',
+          generatedTags: [
+            'Luxury Wear',
+            'Colombo Boutique',
+            'Sri Lankan Fashion',
+            'Summer Collection',
+            'Artisanal Tailoring',
+          ],
+          approved: false,
+          createdAt: new Date().toISOString(),
+        },
+      };
+    }
+
+    if (cleanUrl === '/inventory/receive') {
+      return {
+        success: true,
+        message: `Successfully received ${body.items?.length || 1} items into inventory.`,
+        data: {
+          referenceNumber: body.referenceNumber || body.reference || `GRN-${Date.now().toString().slice(-4)}`,
+          receivedCount: body.items?.length || 1,
+        },
+      };
     }
   }
 

@@ -12,11 +12,12 @@ import {
   DEMO_DASHBOARD_METRICS,
   generateDemoTrend,
 } from '../data/mockData';
-import { Product, Category, Customer, Supplier, Expense, Sale, DashboardMetrics } from '../types';
+import { Product, Category, Brand, Customer, Supplier, Expense, Sale, DashboardMetrics } from '../types';
 
 const STORAGE_KEYS = {
   PRODUCTS: 'luxe_demo_products',
   CATEGORIES: 'luxe_demo_categories',
+  BRANDS: 'luxe_demo_brands',
   CUSTOMERS: 'luxe_demo_customers',
   SUPPLIERS: 'luxe_demo_suppliers',
   EXPENSES: 'luxe_demo_expenses',
@@ -95,6 +96,30 @@ class DemoStore {
     }
   }
 
+  public addCategory(category: Category): Category {
+    const categories = this.getCategories();
+    const updated = [...categories, category];
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(updated));
+    return category;
+  }
+
+  // --- Brands ---
+  public getBrands(): Brand[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.BRANDS);
+      return data ? JSON.parse(data) : DEMO_BRANDS;
+    } catch {
+      return DEMO_BRANDS;
+    }
+  }
+
+  public addBrand(brand: Brand): Brand {
+    const brands = this.getBrands();
+    const updated = [...brands, brand];
+    localStorage.setItem(STORAGE_KEYS.BRANDS, JSON.stringify(updated));
+    return brand;
+  }
+
   // --- Customers ---
   public getCustomers(): Customer[] {
     try {
@@ -120,6 +145,35 @@ class DemoStore {
     } catch {
       return DEMO_SUPPLIERS;
     }
+  }
+
+  public addSupplier(supplier: Supplier): Supplier {
+    const suppliers = this.getSuppliers();
+    const updated = [supplier, ...suppliers];
+    localStorage.setItem(STORAGE_KEYS.SUPPLIERS, JSON.stringify(updated));
+    return supplier;
+  }
+
+  public updateSupplier(supplier: Supplier): Supplier {
+    const suppliers = this.getSuppliers();
+    const updated = suppliers.map((s) => (s.id === supplier.id ? supplier : s));
+    localStorage.setItem(STORAGE_KEYS.SUPPLIERS, JSON.stringify(updated));
+    return supplier;
+  }
+
+  public recordSupplierPayment(supplierId: string, amount: number): Supplier | null {
+    const suppliers = this.getSuppliers();
+    let updatedSupplier: Supplier | null = null;
+    const updated = suppliers.map((s) => {
+      if (s.id === supplierId) {
+        const newBalance = Math.max(0, s.outstandingBalance - amount);
+        updatedSupplier = { ...s, outstandingBalance: newBalance };
+        return updatedSupplier;
+      }
+      return s;
+    });
+    localStorage.setItem(STORAGE_KEYS.SUPPLIERS, JSON.stringify(updated));
+    return updatedSupplier;
   }
 
   // --- Expenses ---
