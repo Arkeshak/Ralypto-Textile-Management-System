@@ -3,13 +3,22 @@
   "version": "1.0.0",
   "description": "Ralypto Dress Shop Management System - Retail POS, Inventory & SaaS for Sri Lankan Fashion Retailers",
   "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "setup": "npm --prefix backend run setup",
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "test:backend": "npm --prefix backend test",
     "build:backend": "npm --prefix backend run build",
-    "build:frontend": "npm --prefix frontend run build"
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down"
   },
   "keywords": ["pos", "fashion-retail", "inventory", "dress-shop", "sri-lanka", "lkr"],
   "author": "Ralypto Technologies",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
 }

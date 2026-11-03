@@ -10,6 +10,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "prisma:seed": "ts-node-dev prisma/seed.ts",
+    "setup": "node scripts/setup-db.js && prisma generate && prisma db push && prisma db seed",
     "test": "vitest run"
   },
   "dependencies": {
@@ -36,8 +37,12 @@
     "@types/uuid": "^10.0.0",
     "prisma": "^5.22.0",
     "supertest": "^7.0.0",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }

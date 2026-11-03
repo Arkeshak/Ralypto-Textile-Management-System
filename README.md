@@ -120,26 +120,12 @@ Maintains a detailed invoice ledger with search, cashier tracking, customer rece
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/Arkeshak/Ralypto-Textile-Management-System.git
-cd Ralypto-Textile-Management-System
+cd "Ralypto-Textile-Management-System"
 ```
 
-### 2. Install Dependencies
-You can install both frontend and backend dependencies:
-
+### 2. Install All Dependencies (root + backend + frontend)
 ```bash
-# Install root, frontend, and backend packages
 npm run install:all
-```
-
-*Or manually in each folder:*
-```bash
-# In backend/
-cd backend
-npm install
-
-# In frontend/
-cd ../frontend
-npm install
 ```
 
 ### 3. Configure Environment Variables
@@ -155,29 +141,31 @@ FASHN_AI_API_KEY=your_key_here
 GEMINI_API_KEY=your_key_here
 ```
 
-### 4. Initialize Database & Seed
+### 4. Initialize Database & Seed (Zero-Config SQLite)
 ```bash
-cd backend
-npx prisma db push
-npx prisma db seed
+npm run setup
 ```
+This runs Prisma generate, pushes the schema to a local SQLite database (`backend/prisma/dev.db`), and seeds demo data. No separate database server is required.
 
 ### 5. Start Development Servers
-From the project root:
+From the project root, start both backend and frontend together:
 ```bash
 npm run dev
 ```
 
-Or run frontend and backend independently:
-```bash
-# Backend server (http://localhost:5000)
-cd backend && npm run dev
-
-# Frontend dev server (http://localhost:5173)
-cd frontend && npm run dev
-```
+- Backend API: `http://localhost:5000`
+- Frontend app: `http://localhost:5173`
 
 Open your browser at **`http://localhost:5173`**.
+
+Or run them independently in separate terminals:
+```bash
+# Backend server (http://localhost:5000)
+npm run dev:backend
+
+# Frontend dev server (http://localhost:5173)
+npm run dev:frontend
+```
 
 ---
 
@@ -187,9 +175,9 @@ For evaluation and demonstration purposes, use the 1-click login buttons on the 
 
 | Role | Email | Password | Permissions |
 |---|---|---|---|
-| **Store Owner** | `owner@luxethreads.lk` | `password123` | Full administrative access, AI Studio, reports, settings |
-| **Store Manager** | `manager@luxethreads.lk` | `password123` | Products, inventory, purchases, sales, customers |
-| **Front Cashier** | `cashier@luxethreads.lk` | `password123` | High-speed POS billing, returns, receipt generation |
+| **Store Owner** | `owner@ralypto.lk` | `password123` | Full administrative access, AI Studio, reports, settings |
+| **Store Manager** | `manager@ralypto.lk` | `password123` | Products, inventory, purchases, sales, customers |
+| **Front Cashier** | `cashier@ralypto.lk` | `password123` | High-speed POS billing, returns, receipt generation |
 
 ---
 
@@ -204,6 +192,19 @@ Generates an optimized, tree-shaken static production bundle in `frontend/dist/`
 
 ### Static Demo Deployment (Vercel / Netlify / GitHub Pages)
 The frontend is designed to run statically without requiring a backend server. The transparent fallback layer in `api.ts` connects seamlessly to the built-in browser store (`demoStore.ts`), enabling instant, zero-cost public demonstrations.
+
+### Docker Deployment (One Command)
+```bash
+npm run docker:up
+```
+- Backend API: `http://localhost:5000`
+- Frontend app: `http://localhost:80`
+- Database: SQLite (persisted in a Docker volume)
+
+To stop:
+```bash
+npm run docker:down
+```
 
 ---
 

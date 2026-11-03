@@ -65,6 +65,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initAuth: async () => {
     const token = localStorage.getItem('ralypto_token');
     if (!token) {
+      // Demo mode: sign in automatically as the owner unless VITE_REQUIRE_LOGIN=true
+      if (import.meta.env.VITE_REQUIRE_LOGIN !== 'true') {
+        try {
+          const res = await api.post('/auth/login', { email: 'owner@ralypto.lk', password: 'password123' });
+          if (res.success && res.data) {
+            const { token: t, user, business, branches } = res.data;
+            get().setAuth(t, user, business, branches);
+            return;
+          }
+        } catch {
+          // fall through to the login screen
+        }
+      }
       set({ isLoading: false });
       return;
     }
