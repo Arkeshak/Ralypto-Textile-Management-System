@@ -1,7 +1,7 @@
 import { demoStore } from './demoStore';
 import { DEMO_BRANDS, DEMO_STAFF, DEMO_BUSINESS, DEMO_BRANCHES } from '../data/mockData';
 
-const BASE_URL = '/api';
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export class ApiError extends Error {
   status: number;
@@ -20,6 +20,24 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
   const cleanUrl = endpoint.split('?')[0];
 
   if (method === 'GET') {
+    if (cleanUrl === '/auth/me') {
+      return {
+        success: true,
+        data: {
+          user: {
+            id: 'user-demo-01',
+            name: 'Nadeeka Wickramasinghe',
+            email: 'owner@ralypto.lk',
+            role: 'Owner',
+            permissions: ['*'],
+            branchId: 'branch-col-03',
+            branchName: 'Flagship Boutique — Colombo 03',
+          },
+          business: DEMO_BUSINESS,
+          branches: DEMO_BRANCHES,
+        },
+      };
+    }
     if (cleanUrl === '/dashboard/metrics') {
       return { success: true, data: demoStore.getDashboardMetrics() };
     }
@@ -626,6 +644,83 @@ function resolveDemoMock(endpoint: string, options: RequestInit = {}): any | nul
         },
       };
     }
+
+    if (cleanUrl === '/inventory/adjust') {
+      return {
+        success: true,
+        message: 'Stock adjustment saved successfully.',
+        data: {
+          id: `adj-${Date.now()}`,
+          reason: body.reason || 'PHYSICAL_AUDIT',
+          notes: body.notes || 'Audited adjustment',
+          items: body.items || [],
+        },
+      };
+    }
+
+    if (cleanUrl === '/auth/register-setup') {
+      const bizName = body.businessName || 'Ralypto Silk Boutique';
+      const user = {
+        id: 'user-demo-owner',
+        name: body.ownerName || 'Boutique Owner',
+        email: body.ownerEmail || 'boutique@ralypto.lk',
+        role: 'Owner',
+        permissions: ['*'],
+        branchId: 'branch-col-03',
+        branchName: 'Main Store',
+      };
+      const business = {
+        ...DEMO_BUSINESS,
+        name: bizName,
+        phone: body.phone || '+94 11 258 9632',
+        address: body.address || 'Galle Road, Colombo 03',
+      };
+      const branch = {
+        id: 'branch-col-03',
+        businessId: business.id,
+        name: 'Main Store',
+        code: 'COL-01',
+        isMain: true,
+        address: body.address || 'Colombo',
+      };
+      return {
+        success: true,
+        data: {
+          token: 'demo_jwt_token_setup',
+          user,
+          business,
+          branch,
+        },
+      };
+    }
+
+    if (cleanUrl.startsWith('/customers/') && cleanUrl.endsWith('/payments')) {
+      const parts = cleanUrl.split('/');
+      const customerId = parts[2];
+      const amount = Number(body.amount) || 0;
+      demoStore.recordCustomerPayment(customerId, amount);
+      return {
+        success: true,
+        data: { id: `pay-${Date.now()}`, customerId, amount, createdAt: new Date().toISOString() },
+        message: 'Payment received successfully',
+      };
+    }
+
+    if (cleanUrl === '/ai/photo-studio/approve') {
+      return {
+        success: true,
+        message: 'Product photo approved and published to boutique catalog.',
+        data: { approved: true, productId: body.productId },
+      };
+    }
+  }
+
+  if (method === 'PUT') {
+    return { success: true, message: 'Updated successfully', data: options.body ? JSON.parse(options.body as string) : {} };
+  }
+
+  if (method === 'DELETE') {
+    return { success: true, message: 'Deleted successfully' };
   }
 
   return null;

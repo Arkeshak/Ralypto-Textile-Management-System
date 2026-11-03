@@ -137,6 +137,21 @@ class DemoStore {
     return customer;
   }
 
+  public recordCustomerPayment(customerId: string, amount: number): Customer | null {
+    const customers = this.getCustomers();
+    let updatedCustomer: Customer | null = null;
+    const updated = customers.map((c) => {
+      if (c.id === customerId) {
+        const newBalance = Math.max(0, c.outstandingBalance - amount);
+        updatedCustomer = { ...c, outstandingBalance: newBalance };
+        return updatedCustomer;
+      }
+      return c;
+    });
+    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(updated));
+    return updatedCustomer;
+  }
+
   // --- Suppliers ---
   public getSuppliers(): Supplier[] {
     try {
